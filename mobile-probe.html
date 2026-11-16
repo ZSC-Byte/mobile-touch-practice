@@ -1,0 +1,577 @@
+<!-- 姓名：邹思成    学号：23001010601    任务一：事件侦探    日期：2026-11-16 -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <!-- ① 视口：不写会整体缩小 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>任务一 · 事件侦探 | 邹思成</title>
+  <link rel="stylesheet" href="assets/css/wy-common.css">
+  <style>
+    /* ---------------- 探针区 ---------------- */
+    .wy_probe {
+      position: relative;
+      height: 240px;
+      border-radius: 20px;
+      background: radial-gradient(circle at 30% 20%, #2b1d4f 0%, #151022 60%, #0c0917 100%);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      overflow: hidden;
+      /* ③ 这块区域的手势归我，浏览器不要滚动页面 */
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      /* iOS 长按不弹系统菜单 */
+      -webkit-touch-callout: none;
+    }
+
+    /* 拖动时出现的光圈，给手指一个"被接住"的反馈 */
+    .wy_probe_halo {
+      position: absolute;
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(140, 110, 255, 0.55) 0%, rgba(140, 110, 255, 0) 70%);
+      transform: translate(-50%, -50%);
+      opacity: 0;
+      transition: opacity 0.2s;
+      pointer-events: none;
+    }
+
+    .wy_probe_halo.is-on {
+      opacity: 1;
+    }
+
+    .wy_probe_hint {
+      position: relative;
+      font-size: 13px;
+      letter-spacing: 1px;
+      opacity: 0.55;
+    }
+
+    .wy_probe_state {
+      position: relative;
+      margin-top: 10px;
+      font-size: 19px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      min-height: 28px;
+    }
+
+    .wy_probe_count {
+      position: relative;
+      margin-top: 8px;
+      font-size: 12px;
+      opacity: 0.6;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ---------------- 日志 ---------------- */
+    .wy_logbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 18px 2px 8px;
+    }
+
+    .wy_logbar_label {
+      font-size: 13px;
+      color: var(--wy_sub);
+      font-weight: 600;
+    }
+
+    .wy_log_clear {
+      min-height: 36px;
+      padding: 0 14px;
+      border: 0;
+      border-radius: 999px;
+      background: rgba(107, 78, 255, 0.1);
+      color: var(--wy_main);
+      font-size: 13px;
+      font-family: inherit;
+      touch-action: manipulation;
+    }
+
+    .wy_log_clear:active {
+      background: rgba(107, 78, 255, 0.22);
+    }
+
+    .wy_log {
+      height: 260px;
+      margin: 0;
+      padding: 10px 12px;
+      list-style: none;
+      border-radius: 16px;
+      background: #15122a;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      font-family: "SF Mono", Consolas, "Courier New", monospace;
+      font-size: 12px;
+      line-height: 1.9;
+      color: #cfcbe8;
+    }
+
+    .wy_log li {
+      padding: 1px 0;
+      white-space: nowrap;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .wy_log_time {
+      display: inline-block;
+      width: 52px;
+      color: #6f6a93;
+    }
+
+    .wy_log_name {
+      display: inline-block;
+      width: 92px;
+      font-weight: 700;
+    }
+
+    .wy_log_name--start   { color: #7ee3a8; }
+    .wy_log_name--move    { color: #7fb2ff; }
+    .wy_log_name--end     { color: #ffcc66; }
+    .wy_log_name--cancel  { color: #ff7a7a; }
+    .wy_log_name--click   { color: #d0a6ff; }
+
+    .wy_log_empty {
+      color: #5f5b7d;
+    }
+
+    /* ---------------- 记录表 ---------------- */
+    .wy_table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+    }
+
+    .wy_table th,
+    .wy_table td {
+      padding: 8px 6px;
+      border-bottom: 1px solid var(--wy_line);
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    .wy_table th {
+      color: var(--wy_sub);
+      font-weight: 600;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .wy_table td:first-child {
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .wy_table input {
+      width: 100%;
+      min-height: 34px;
+      padding: 4px 8px;
+      border: 1px solid var(--wy_line);
+      border-radius: 8px;
+      background: #fafaff;
+      color: var(--wy_text);
+      font-family: inherit;
+      font-size: 12.5px;
+    }
+
+    .wy_table input:focus {
+      outline: none;
+      border-color: var(--wy_main);
+    }
+
+    /* ---------------- 答案折叠 ---------------- */
+    .wy_answer {
+      margin-top: 12px;
+      border: 1px solid var(--wy_line);
+      border-radius: 14px;
+      background: #fbfaff;
+      overflow: hidden;
+    }
+
+    .wy_answer summary {
+      padding: 13px 14px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      list-style: none;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      touch-action: manipulation;
+    }
+
+    .wy_answer summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .wy_answer summary::after {
+      content: "+";
+      margin-left: auto;
+      color: var(--wy_main);
+      font-size: 18px;
+      font-weight: 400;
+    }
+
+    .wy_answer[open] summary::after {
+      content: "−";
+    }
+
+    .wy_answer_body {
+      padding: 0 14px 14px;
+      font-size: 13.5px;
+      color: #43415c;
+    }
+
+    .wy_answer_body p {
+      margin: 8px 0;
+    }
+
+    .wy_answer_body b {
+      color: var(--wy_text);
+    }
+
+    .wy_kbd {
+      padding: 1px 6px;
+      border-radius: 6px;
+      background: #efedf9;
+      color: #4a2fe0;
+      font-family: "SF Mono", Consolas, monospace;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wy_page">
+
+    <div class="wy_topbar">
+      <a class="wy_back" href="index.html">← 返回导航</a>
+    </div>
+
+    <h1 class="wy_title">事件侦探</h1>
+    <p class="wy_subtitle">任务一 · 看清触摸事件的真实触发顺序（★）</p>
+
+    <p class="wy_hint" style="margin-bottom: 14px;">
+      请用手机打开本页。在下方黑色区域依次做 5 种操作，日志会按真实顺序记录；
+      注意观察 <b>一次拖动触发多少次 touchmove</b>，以及 <b>click 出现在什么位置</b>。
+    </p>
+
+    <!-- 探针区 -->
+    <div class="wy_probe" id="wy_probe">
+      <div class="wy_probe_halo" id="wy_probe_halo"></div>
+      <div class="wy_probe_hint">这块黑色区域已加 touch-action: none</div>
+      <div class="wy_probe_state" id="wy_probe_state">等待触摸…</div>
+      <div class="wy_probe_count" id="wy_probe_count">当前 0 根手指</div>
+    </div>
+
+    <!-- 日志 -->
+    <div class="wy_logbar">
+      <span class="wy_logbar_label">事件日志（最新在上，最多 200 条）</span>
+      <button class="wy_log_clear" id="wy_log_clear" type="button">清空</button>
+    </div>
+    <ul class="wy_log" id="wy_log">
+      <li class="wy_log_empty">还没有记录，先用手指按一下上面的区域。</li>
+    </ul>
+
+    <!-- 观察记录表 -->
+    <div class="wy_card" style="margin-top: 18px;">
+      <h2 class="wy_card_title">观察记录表</h2>
+      <p style="margin: 0 0 10px; font-size: 12.5px; color: var(--wy_sub);">
+        按顺序做完 5 种操作，把日志里的事件序列抄到下表（可直接在输入框里写）。
+      </p>
+      <table class="wy_table">
+        <thead>
+          <tr>
+            <th>操作</th>
+            <th>看到的事件序列</th>
+            <th style="width: 76px;">move 次数</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>单击</td>
+            <td><input type="text" placeholder="如 start → end → click" aria-label="单击的事件序列"></td>
+            <td><input type="text" placeholder="0" aria-label="单击的 move 次数"></td>
+          </tr>
+          <tr>
+            <td>向上拖动</td>
+            <td><input type="text" placeholder="如 start → move×…" aria-label="向上拖动的事件序列"></td>
+            <td><input type="text" aria-label="向上拖动的 move 次数"></td>
+          </tr>
+          <tr>
+            <td>向左快速滑</td>
+            <td><input type="text" aria-label="向左快速滑的事件序列"></td>
+            <td><input type="text" aria-label="向左快速滑的 move 次数"></td>
+          </tr>
+          <tr>
+            <td>双指触摸</td>
+            <td><input type="text" aria-label="双指触摸的事件序列"></td>
+            <td><input type="text" aria-label="双指触摸的 move 次数"></td>
+          </tr>
+          <tr>
+            <td>长按后抬起</td>
+            <td><input type="text" aria-label="长按后抬起的事件序列"></td>
+            <td><input type="text" placeholder="0" aria-label="长按后抬起的 move 次数"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 三问答案 -->
+    <div class="wy_card">
+      <h2 class="wy_card_title">三个思考题（答辩用，点开看答案）</h2>
+
+      <details class="wy_answer">
+        <summary>① 一次拖动里 touchmove 大约触发多少次？和距离有什么关系？</summary>
+        <div class="wy_answer_body">
+          <p>
+            没有固定值，<b>次数 = 拖动过程被浏览器采样到多少帧</b>。浏览器通常在每一帧（约 16ms，60Hz）派发一次
+            <span class="wy_kbd">touchmove</span>，所以：
+          </p>
+          <p>
+            · <b>慢速拖动</b>：手指停留时间长，200px 可能触发 30–50 次；<br>
+            · <b>快速甩动</b>：手指很快离开屏幕，200px 可能只有 3–8 次；<br>
+            · <b>距离越大、时间越长，次数越多</b>，但次数取决于「时长 × 采样率」，不等同于距离。
+          </p>
+          <p>
+            本页日志左侧的毫秒数是与上一条记录的间隔，可以看到 move 基本稳定在 8–20ms 一次。
+            正因如此，手势逻辑必须能在 <b>任意次数的 move</b> 下都算出正确结果（所以最终要算的是总位移，而不是数次数）。
+          </p>
+        </div>
+      </details>
+
+      <details class="wy_answer">
+        <summary>② click 出现在 touchend 之前还是之后？为什么？</summary>
+        <div class="wy_answer_body">
+          <p>
+            在 <span class="wy_kbd">touchend</span> <b>之后</b>。浏览器要判断这次触摸是不是「点击」——
+            传统实现会等约 300ms 看有没有第二次点击（双击缩放），确认后才补发一次 click。
+          </p>
+          <p>
+            实测还能看到两种情况：<br>
+            · 缓慢拖动一段距离后抬手，click <b>可能不出现</b>（移动距离过大，浏览器判定为拖动而非点击）；<br>
+            · 如果触摸处理里调用了 <span class="wy_kbd">preventDefault()</span>，click 也会被阻止。
+          </p>
+          <p>
+            这就是「点一次执行两次」的根源：<b>touch 与 click 两套逻辑不能同时绑在同一个动作上</b>，必须二选一。
+          </p>
+        </div>
+      </details>
+
+      <details class="wy_answer">
+        <summary>③ 如果把 touchend 换成 touchcancel，会发生什么？</summary>
+        <div class="wy_answer_body">
+          <p>
+            正常抬手<b>不会</b>触发 touchcancel，只有手势被系统打断时才会——来电、通知横幅、系统手势返回、
+            弹窗抢焦点、指纹解锁等。
+          </p>
+          <p>
+            如果只监听 touchcancel 代替 touchend：<b>正常松开手指时什么都收不到</b>。
+            于是长按定时器不会取消（松手后仍会弹出「长按」）、卡片停在半途、拖动状态卡死，
+            下一次手势还会带着上一次的残留数据继续算。
+          </p>
+          <p>
+            正确做法是<b>两个都监听</b>：touchend 负责正常收尾，touchcancel 负责异常兜底，
+            且两者的清理逻辑写成同一个函数，避免漏清。
+          </p>
+        </div>
+      </details>
+
+      <details class="wy_answer">
+        <summary>④ 为什么 touchend 里要用 changedTouches[0]，不能用 touches[0]？</summary>
+        <div class="wy_answer_body">
+          <p>
+            <b>touches</b> 是「此刻仍停留在屏幕上的所有手指」，<b>changedTouches</b> 是「本次事件中发生变化的手指」。
+          </p>
+          <p>
+            抬手的一瞬间，那根手指已经从 touches 里被移除了——
+            单指操作时 <span class="wy_kbd">touches.length</span> 直接变成 0，
+            <span class="wy_kbd">touches[0]</span> 是 <b>undefined</b>，读 clientX 立刻报错；
+            双指时它拿到的会是<b>还按着的那根手指</b>，算出来的滑动距离完全错误。
+          </p>
+          <p>
+            而 changedTouches 在 touchend 时恰好保存了「刚刚抬起的那根手指」的最终坐标，
+            所以算位移、算速度都必须用它。
+          </p>
+        </div>
+      </details>
+    </div>
+
+    <div class="wy_footer">
+      邹思成 · 23001010601<br>
+      任务一 · 事件侦探
+    </div>
+
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      /* ============ 元素引用 ============ */
+      var wy_probe = document.getElementById('wy_probe');
+      var wy_probeState = document.getElementById('wy_probe_state');
+      var wy_probeCount = document.getElementById('wy_probe_count');
+      var wy_probeHalo = document.getElementById('wy_probe_halo');
+      var wy_log = document.getElementById('wy_log');
+      var wy_clearBtn = document.getElementById('wy_log_clear');
+
+      var WY_MAX = 200;      // 日志上限，防止长时间拖动把 DOM 撑爆
+      var wy_lastTime = 0;   // 上一条日志的时间戳，用来算间隔
+
+      /* ============ 工具函数 ============ */
+
+      // 事件名的中文说明，方便肉眼对照
+      var wy_nameMap = {
+        touchstart: 'touchstart',
+        touchmove: 'touchmove',
+        touchend: 'touchend',
+        touchcancel: 'touchcancel',
+        click: 'click'
+      };
+
+      // 往日志顶部插一条记录
+      function wy_pushLog(name, detail, gap) {
+        // 第一条记录时把"暂无记录"的占位删掉
+        var wy_empty = wy_log.querySelector('.wy_log_empty');
+        if (wy_empty) {
+          wy_log.removeChild(wy_empty);
+        }
+
+        var wy_li = document.createElement('li');
+
+        var wy_time = document.createElement('span');
+        wy_time.className = 'wy_log_time';
+        wy_time.textContent = gap === null ? '0ms' : '+' + gap + 'ms';
+
+        var wy_name = document.createElement('span');
+        wy_name.className = 'wy_log_name wy_log_name--' + name.replace('touch', '');
+        wy_name.textContent = wy_nameMap[name] || name;
+
+        var wy_detail = document.createElement('span');
+        wy_detail.textContent = detail;
+
+        wy_li.appendChild(wy_time);
+        wy_li.appendChild(wy_name);
+        wy_li.appendChild(wy_detail);
+
+        // 最新在上：直接插到最前面
+        wy_log.insertBefore(wy_li, wy_log.firstChild);
+
+        // 超出上限时从尾部删，保持列表长度恒定
+        while (wy_log.children.length > WY_MAX) {
+          wy_log.removeChild(wy_log.lastChild);
+        }
+      }
+
+      // 取第一根手指的坐标（探针只需要"看看"，用 touches 即可）
+      function wy_firstTouch(e) {
+        if (e.touches && e.touches.length > 0) {
+          return e.touches[0];
+        }
+        return null;
+      }
+
+      // 计算与上一条日志的时间间隔
+      function wy_gap() {
+        var wy_now = performance.now();
+        var wy_g = wy_lastTime ? Math.round(wy_now - wy_lastTime) : null;
+        wy_lastTime = wy_now;
+        return wy_g;
+      }
+
+      // 更新大字状态
+      function wy_updateState(name, count, x, y) {
+        wy_probeState.textContent = name + (count > 0 ? ' · ' + count + ' 根手指' : '');
+        wy_probeCount.textContent = x === null
+          ? '当前 0 根手指'
+          : '第一指 x=' + x + ' y=' + y + ' · 共 ' + count + ' 根';
+      }
+
+      /* ============ touchstart ============ */
+      wy_probe.addEventListener('touchstart', function (e) {
+        var wy_t = wy_firstTouch(e);
+        var wy_x = wy_t ? Math.round(wy_t.clientX) : null;
+        var wy_y = wy_t ? Math.round(wy_t.clientY) : null;
+
+        wy_pushLog('touchstart', ' · ' + e.touches.length + ' 指 · x=' + wy_x + ' y=' + wy_y, wy_gap());
+        wy_updateState('touchstart', e.touches.length, wy_x, wy_y);
+        wy_moveHalo(e, true);
+      }, { passive: true });
+
+      /* ============ touchmove ============ */
+      wy_probe.addEventListener('touchmove', function (e) {
+        var wy_t = wy_firstTouch(e);
+        var wy_x = wy_t ? Math.round(wy_t.clientX) : null;
+        var wy_y = wy_t ? Math.round(wy_t.clientY) : null;
+
+        wy_pushLog('touchmove', ' · ' + e.touches.length + ' 指 · x=' + wy_x + ' y=' + wy_y, wy_gap());
+        wy_updateState('touchmove', e.touches.length, wy_x, wy_y);
+        wy_moveHalo(e, true);
+      }, { passive: true });
+
+      /* ============ touchend ============ */
+      wy_probe.addEventListener('touchend', function (e) {
+        // 抬手时这根手指已经不在 touches 里，必须用 changedTouches
+        var wy_t = e.changedTouches[0];
+        var wy_x = Math.round(wy_t.clientX);
+        var wy_y = Math.round(wy_t.clientY);
+
+        wy_pushLog('touchend', ' · 剩余 ' + e.touches.length + ' 指 · x=' + wy_x + ' y=' + wy_y, wy_gap());
+        wy_updateState('touchend', e.touches.length, wy_x, wy_y);
+
+        if (e.touches.length === 0) {
+          wy_moveHalo(e, false);
+        }
+      }, { passive: true });
+
+      /* ============ touchcancel ============ */
+      wy_probe.addEventListener('touchcancel', function (e) {
+        wy_pushLog('touchcancel', ' · 手势被系统打断', wy_gap());
+        wy_probeState.textContent = 'touchcancel 被系统打断';
+        wy_probeCount.textContent = '当前 0 根手指';
+        wy_moveHalo(e, false);
+      }, { passive: true });
+
+      /* ============ click（观察它排在 touchend 之后） ============ */
+      wy_probe.addEventListener('click', function (e) {
+        wy_pushLog('click', ' · x=' + Math.round(e.clientX) + ' y=' + Math.round(e.clientY), wy_gap());
+      });
+
+      /* ============ 光圈跟随手指 ============ */
+      function wy_moveHalo(e, wy_show) {
+        if (!wy_show) {
+          wy_probeHalo.classList.remove('is-on');
+          return;
+        }
+        var wy_t = wy_firstTouch(e);
+        if (!wy_t) {
+          return;
+        }
+        // 转成相对探针区的坐标
+        var wy_rect = wy_probe.getBoundingClientRect();
+        wy_probeHalo.style.left = (wy_t.clientX - wy_rect.left) + 'px';
+        wy_probeHalo.style.top = (wy_t.clientY - wy_rect.top) + 'px';
+        wy_probeHalo.classList.add('is-on');
+      }
+
+      /* ============ 清空 ============ */
+      wy_clearBtn.addEventListener('click', function () {
+        wy_log.innerHTML = '<li class="wy_log_empty">已清空，重新按一下上面的区域。</li>';
+        wy_lastTime = 0;
+        wy_probeState.textContent = '等待触摸…';
+        wy_probeCount.textContent = '当前 0 根手指';
+        wy_probeHalo.classList.remove('is-on');
+      });
+
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,678 @@
+<!-- 姓名：邹思成    学号：23001010601    任务四：摇一摇抽菜谱    日期：2026-11-16 -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <!-- ① 视口：不写会整体缩小 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>任务四 · 摇一摇抽菜谱 | 邹思成</title>
+  <link rel="stylesheet" href="assets/css/wy-common.css">
+  <style>
+    /* ---------------- 主视觉 ---------------- */
+    .wy_hero {
+      position: relative;
+      padding: 28px 22px 22px;
+      border-radius: 24px;
+      background: linear-gradient(155deg, #2a1a4d 0%, #402a7d 50%, #7b3fa0 100%);
+      color: #fff;
+      text-align: center;
+      overflow: hidden;
+      box-shadow: 0 16px 36px rgba(45, 28, 96, 0.24);
+    }
+
+    /* 背景光晕 */
+    .wy_hero::before {
+      content: "";
+      position: absolute;
+      width: 260px;
+      height: 260px;
+      left: 50%;
+      top: -120px;
+      transform: translateX(-50%);
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0) 70%);
+    }
+
+    .wy_phone {
+      position: relative;
+      width: 74px;
+      height: 118px;
+      margin: 4px auto 0;
+      border: 2px solid rgba(255, 255, 255, 0.75);
+      border-radius: 14px;
+    }
+
+    /* 手机两侧的摇动弧线 */
+    .wy_phone::before,
+    .wy_phone::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      width: 16px;
+      height: 46px;
+      border: 2px solid rgba(255, 255, 255, 0.42);
+      border-radius: 50%;
+      transform: translateY(-50%);
+    }
+
+    .wy_phone::before {
+      left: -16px;
+      border-right: 0;
+      border-top-color: transparent;
+      border-bottom-color: transparent;
+    }
+
+    .wy_phone::after {
+      right: -16px;
+      border-left: 0;
+      border-top-color: transparent;
+      border-bottom-color: transparent;
+    }
+
+    .wy_phone_bar {
+      position: absolute;
+      left: 50%;
+      top: 8px;
+      width: 26px;
+      height: 3px;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.6);
+      transform: translateX(-50%);
+    }
+
+    /* 摇动时让手机本体抖一下，给一个视觉提示 */
+    .wy_phone.is-shake {
+      animation: wy_shake 0.5s ease;
+    }
+
+    @keyframes wy_shake {
+      0%, 100% { transform: rotate(0deg); }
+      20% { transform: rotate(-11deg); }
+      40% { transform: rotate(9deg); }
+      60% { transform: rotate(-6deg); }
+      80% { transform: rotate(3deg); }
+    }
+
+    .wy_hero_title {
+      position: relative;
+      margin: 16px 0 6px;
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 1px;
+    }
+
+    .wy_hero_desc {
+      position: relative;
+      margin: 0;
+      font-size: 13px;
+      opacity: 0.76;
+      line-height: 1.8;
+    }
+
+    /* ---------------- 状态与仪表 ---------------- */
+    .wy_status {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      margin-top: 16px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.14);
+      font-size: 12px;
+      letter-spacing: 0.5px;
+    }
+
+    .wy_dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #7ee3a8;
+      box-shadow: 0 0 0 0 rgba(126, 227, 168, 0.7);
+      animation: wy_pulse 1.8s infinite;
+    }
+
+    .wy_dot--off {
+      background: #ff9b9b;
+      animation: none;
+    }
+
+    .wy_dot--wait {
+      background: #ffd166;
+      animation: none;
+    }
+
+    @keyframes wy_pulse {
+      0% { box-shadow: 0 0 0 0 rgba(126, 227, 168, 0.6); }
+      70% { box-shadow: 0 0 0 9px rgba(126, 227, 168, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(126, 227, 168, 0); }
+    }
+
+    /* 实时加速度仪表 */
+    .wy_meter {
+      position: relative;
+      margin-top: 18px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.14);
+      font-size: 11px;
+      text-align: left;
+    }
+
+    .wy_meter_row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 7px;
+    }
+
+    .wy_meter_val {
+      font-variant-numeric: tabular-nums;
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .wy_meter_val small {
+      font-size: 11px;
+      font-weight: 400;
+      opacity: 0.6;
+      margin-left: 3px;
+    }
+
+    .wy_meter_track {
+      position: relative;
+      height: 6px;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.14);
+      overflow: hidden;
+    }
+
+    .wy_meter_fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 3px;
+      background: linear-gradient(90deg, #7ee3a8, #ffd166 62%, #ff7a7a);
+      transition: width 0.1s linear;
+    }
+
+    /* 阈值刻度线 */
+    .wy_meter_mark {
+      position: absolute;
+      top: -2px;
+      bottom: -2px;
+      left: 72%;            /* 18 / 25 */
+      width: 2px;
+      background: rgba(255, 255, 255, 0.8);
+    }
+
+    .wy_meter_legend {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 6px;
+      opacity: 0.55;
+      font-size: 10px;
+    }
+
+    /* ---------------- 权限 / 降级按钮 ---------------- */
+    .wy_hero_actions {
+      position: relative;
+      margin-top: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .wy_hero .wy_btn {
+      background: rgba(255, 255, 255, 0.92);
+      color: #3a2a7a;
+      width: 100%;
+    }
+
+    .wy_hero .wy_btn:active {
+      background: #ffffff;
+      transform: scale(0.98);
+    }
+
+    /* ---------------- 结果卡 ---------------- */
+    .wy_result {
+      position: relative;
+      margin-top: 16px;
+      padding: 20px;
+      border-radius: 18px;
+      color: #fff;
+      text-align: left;
+      background: linear-gradient(140deg, #4a4a6a, #6a6a8c);
+      transform: scale(0.96);
+      opacity: 0.55;
+      transition: background 0.3s;
+      overflow: hidden;
+    }
+
+    .wy_result.is-pop {
+      animation: wy_pop 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    @keyframes wy_pop {
+      0% { transform: scale(0.72); opacity: 0; }
+      60% { transform: scale(1.04); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .wy_result_label {
+      font-size: 11px;
+      letter-spacing: 2px;
+      opacity: 0.7;
+    }
+
+    .wy_result_name {
+      margin: 6px 0 4px;
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: 2px;
+    }
+
+    .wy_result_note {
+      margin: 0;
+      font-size: 12.5px;
+      line-height: 1.8;
+      opacity: 0.86;
+    }
+
+    .wy_result_no {
+      position: absolute;
+      right: 14px;
+      top: 10px;
+      font-size: 44px;
+      font-weight: 900;
+      opacity: 0.14;
+      line-height: 1;
+    }
+
+    /* ---------------- 说明 ---------------- */
+    .wy_spec {
+      margin: 0;
+      padding-left: 18px;
+      font-size: 13px;
+      color: #4a4863;
+      line-height: 2;
+    }
+
+    .wy_spec li::marker {
+      color: var(--wy_main);
+    }
+
+    .wy_kbd {
+      padding: 1px 6px;
+      border-radius: 6px;
+      background: #efedf9;
+      color: #4a2fe0;
+      font-family: "SF Mono", Consolas, monospace;
+      font-size: 12px;
+    }
+
+    .wy_compare {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+    }
+
+    .wy_compare th,
+    .wy_compare td {
+      padding: 9px 8px;
+      border-bottom: 1px solid var(--wy_line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .wy_compare th {
+      color: var(--wy_sub);
+      font-size: 12px;
+      white-space: nowrap;
+      font-weight: 600;
+    }
+
+    .wy_compare td:first-child {
+      font-family: "SF Mono", Consolas, monospace;
+      font-size: 11.5px;
+      color: #4a2fe0;
+    }
+  </style>
+</head>
+<body>
+  <div class="wy_page">
+
+    <div class="wy_topbar">
+      <a class="wy_back" href="index.html">← 返回导航</a>
+    </div>
+
+    <h1 class="wy_title">摇一摇 · 今日菜谱</h1>
+    <p class="wy_subtitle">任务四 · 设备传感器 · 权限 · 降级（★★★★）</p>
+
+    <!-- 主视觉 -->
+    <div class="wy_hero" id="wy_hero">
+
+      <div class="wy_phone" id="wy_phone">
+        <span class="wy_phone_bar"></span>
+      </div>
+
+      <h2 class="wy_hero_title">摇一摇手机，抽今日菜谱</h2>
+      <p class="wy_hero_desc">握紧手机左右摇动两下，看看今天吃什么</p>
+
+      <div class="wy_status">
+        <span class="wy_dot wy_dot--wait" id="wy_dot"></span>
+        <span id="wy_status_text">正在检测设备能力…</span>
+      </div>
+
+      <!-- 实时加速度：答辩时能看到阈值判断的依据 -->
+      <div class="wy_meter" id="wy_meter">
+        <div class="wy_meter_row">
+          <span>合成加速度（含重力）</span>
+          <span class="wy_meter_val">
+            <span id="wy_meter_num">0.0</span><small>m/s²</small>
+          </span>
+        </div>
+        <div class="wy_meter_track">
+          <div class="wy_meter_fill" id="wy_meter_fill"></div>
+          <div class="wy_meter_mark"></div>
+        </div>
+        <div class="wy_meter_legend">
+          <span>0</span>
+          <span>阈值 18</span>
+          <span>25</span>
+        </div>
+      </div>
+
+      <!-- 权限按钮（iOS 13+ 才出现）与降级按钮 -->
+      <div class="wy_hero_actions">
+        <button class="wy_btn wy_hidden" id="wy_perm_btn" type="button">开启体感权限</button>
+        <button class="wy_btn wy_hidden" id="wy_fallback_btn" type="button">点我抽一次</button>
+      </div>
+
+      <!-- 结果 -->
+      <div class="wy_result" id="wy_result">
+        <span class="wy_result_no" id="wy_result_no">?</span>
+        <div class="wy_result_label">今日菜谱</div>
+        <div class="wy_result_name" id="wy_result_name">还没摇</div>
+        <p class="wy_result_note" id="wy_result_note">摇一摇，或者点击下面的按钮开始抽取。</p>
+      </div>
+
+    </div>
+
+    <!-- 为什么必须降级 -->
+    <div class="wy_card" style="margin-top: 18px;">
+      <h2 class="wy_card_title">为什么必须做降级？</h2>
+      <p style="margin: 0 0 10px; font-size: 13px; color: #4a4863; line-height: 2;">
+        传感器不是网页的必备能力，它有三道可能失败的关卡，任何一道过不去，页面就不能给用户一片空白：
+      </p>
+      <ul class="wy_spec">
+        <li><b>设备层</b>：部分设备（多数桌面电脑、部分低端平板）根本没有加速度传感器</li>
+        <li><b>权限层</b>：iOS 13+ 要求 <span class="wy_kbd">DeviceMotionEvent.requestPermission()</span>，且必须由用户点击触发，用户点「不允许」就拿不到数据</li>
+        <li><b>数据层</b>：即使事件能绑定，浏览器也可能一直不回传有效的 <span class="wy_kbd">accelerationIncludingGravity</span></li>
+      </ul>
+      <p class="wy_hint" style="margin-top: 12px;">
+        所以本页做了双保险：检测不到事件或 2 秒内没有数据 → 显示「当前设备不支持」并露出「点我抽一次」按钮；
+        被拒绝授权 → 同样给出手动入口。<b>功能可以降级，体验不能中断。</b>
+      </p>
+    </div>
+
+    <!-- 两个加速度的区别 -->
+    <div class="wy_card">
+      <h2 class="wy_card_title">两个加速度属性的区别（答辩必问）</h2>
+      <table class="wy_compare">
+        <thead>
+          <tr>
+            <th>属性</th>
+            <th>含义</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>accelerationIncludingGravity</td>
+            <td>
+              含重力分量。<b>手机平放静止时</b>就会读到约 9.8 m/s²（Z 轴），
+              因为重力一直在「拉着」传感器。摇动时这个值会叠加手的加速度。
+            </td>
+          </tr>
+          <tr>
+            <td>acceleration</td>
+            <td>
+              已剔除重力，只反映设备自身的运动。
+              <b>静止时接近 0</b>，所以判断「有没有在摇」用它更干净。
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p style="margin: 10px 0 0; font-size: 13px; color: #4a4863; line-height: 2;">
+        本页按作业要求用 <span class="wy_kbd">accelerationIncludingGravity</span> 计算
+        <span class="wy_kbd">√(x² + y² + z²)</span>。因为基线不是 0 而是 9.8，
+        阈值必须显著高于它——这里定在 <b>18</b>，静置不会误触发，摇两下就能超过。
+      </p>
+    </div>
+
+    <!-- 参数说明 -->
+    <div class="wy_card">
+      <h2 class="wy_card_title">阈值与冷却是怎么定的</h2>
+      <ul class="wy_spec">
+        <li><b>阈值 18</b>：静止约 9.8，轻放桌面波动约 10~12，快速摇动可达 20~35，取 18 区分得开</li>
+        <li><b>冷却 1.5 秒</b>：一次摇动会连续产生几十条数据，没有冷却会瞬间抽出七八个结果</li>
+        <li><b>回落再武装</b>：触发后必须等合成值降到 12 以下，才允许下一次判定，避免持续晃动连续触发</li>
+        <li><b>无数据判定</b>：绑定事件后 2 秒内没收到有效值，就当这台设备不支持</li>
+      </ul>
+    </div>
+
+    <div class="wy_footer">
+      邹思成 · 23001010601<br>
+      任务四 · 摇一摇彩蛋
+    </div>
+
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      /* ============ 元素 ============ */
+      var wy_dot = document.getElementById('wy_dot');
+      var wy_statusText = document.getElementById('wy_status_text');
+      var wy_phone = document.getElementById('wy_phone');
+      var wy_meterNum = document.getElementById('wy_meter_num');
+      var wy_meterFill = document.getElementById('wy_meter_fill');
+      var wy_permBtn = document.getElementById('wy_perm_btn');
+      var wy_fallbackBtn = document.getElementById('wy_fallback_btn');
+      var wy_result = document.getElementById('wy_result');
+      var wy_resultNo = document.getElementById('wy_result_no');
+      var wy_resultName = document.getElementById('wy_result_name');
+      var wy_resultNote = document.getElementById('wy_result_note');
+
+      /* ============ 常量 ============ */
+      var WY_THRESHOLD = 18;      // 判定摇动的阈值
+      var WY_REARM = 12;          // 回落到这个值以下才允许下次触发
+      var WY_COOLDOWN = 1500;     // 冷却时间（毫秒）
+      var WY_METER_MAX = 25;      // 仪表满量程
+      var WY_WAIT_DATA = 2000;    // 等数据的最长时间
+
+      /* ============ 菜谱池 ============ */
+      var wy_menu = [
+        { name: '红烧肉',  note: '浓油赤酱，配一碗白饭刚刚好。', no: '01', bg: 'linear-gradient(140deg, #7a2a20, #c04a33)' },
+        { name: '西湖醋鱼', note: '酸甜清口，吃完不腻。',         no: '02', bg: 'linear-gradient(140deg, #0c5b60, #2a9c92)' },
+        { name: '麻婆豆腐', note: '麻辣鲜香，一勺能下半碗饭。',   no: '03', bg: 'linear-gradient(140deg, #8c1414, #d9541f)' },
+        { name: '白切鸡',  note: '皮爽肉滑，蘸姜葱油最香。',     no: '04', bg: 'linear-gradient(140deg, #8a6410, #d2a934)' },
+        { name: '小笼包',  note: '先开窗后喝汤，小心烫嘴。',     no: '05', bg: 'linear-gradient(140deg, #5c3a6e, #9a5aa8)' },
+        { name: '糖醋排骨', note: '酸甜挂糖，啃起来有嚼头。',     no: '06', bg: 'linear-gradient(140deg, #7a3b12, #c9772c)' },
+        { name: '宫保鸡丁', note: '花生脆、鸡丁嫩，微辣带回甜。', no: '07', bg: 'linear-gradient(140deg, #8f2020, #d0562a)' },
+        { name: '兰州拉面', note: '一清二白三红四绿，热汤最抚胃。', no: '08', bg: 'linear-gradient(140deg, #2c4a6b, #4a7fa8)' }
+      ];
+
+      /* ============ 状态 ============ */
+      var wy_armed = true;           // 是否可以触发（防止一次摇动多次命中）
+      var wy_cooldownUntil = 0;      // 冷却结束时间
+      var wy_gotData = false;        // 是否收到过有效数据
+      var wy_listening = false;      // 是否已绑定 devicemotion
+      var wy_lastMeterAt = 0;        // 仪表刷新节流
+      var wy_lastPick = -1;          // 上一次抽到的菜，避免连续重复
+
+      /* ============ 状态显示 ============ */
+      function wy_setStatus(wy_text, wy_type) {
+        wy_statusText.textContent = wy_text;
+        wy_dot.className = 'wy_dot';
+        if (wy_type === 'off') {
+          wy_dot.classList.add('wy_dot--off');
+        } else if (wy_type === 'wait') {
+          wy_dot.classList.add('wy_dot--wait');
+        }
+      }
+
+      /* ============ 抽菜谱 ============ */
+      function wy_draw() {
+        var wy_i = Math.floor(Math.random() * wy_menu.length);
+        // 连续两次抽到同一道菜会显得"没反应"，重抽一次
+        if (wy_i === wy_lastPick && wy_menu.length > 1) {
+          wy_i = (wy_i + 1 + Math.floor(Math.random() * (wy_menu.length - 1))) % wy_menu.length;
+        }
+        wy_lastPick = wy_i;
+
+        var wy_item = wy_menu[wy_i];
+        wy_resultName.textContent = wy_item.name;
+        wy_resultNote.textContent = wy_item.note;
+        wy_resultNo.textContent = wy_item.no;
+        wy_result.style.background = wy_item.bg;
+
+        // 重新触发动画：先摘掉 class，强制回流，再挂上
+        wy_result.classList.remove('is-pop');
+        void wy_result.offsetWidth;
+        wy_result.classList.add('is-pop');
+
+        // 手机图形抖一下
+        wy_phone.classList.remove('is-shake');
+        void wy_phone.offsetWidth;
+        wy_phone.classList.add('is-shake');
+      }
+
+      /* ============ 摇动判定 ============ */
+      function wy_onMotion(e) {
+        var wy_a = e.accelerationIncludingGravity;
+
+        // 有些浏览器会回传全 null，这种数据不能参与计算
+        if (!wy_a || (wy_a.x === null && wy_a.y === null && wy_a.z === null)) {
+          return;
+        }
+
+        wy_gotData = true;
+
+        var wy_x = wy_a.x || 0;
+        var wy_y = wy_a.y || 0;
+        var wy_z = wy_a.z || 0;
+        var wy_mag = Math.hypot(wy_x, wy_y, wy_z);
+        var wy_now = Date.now();
+
+        // 仪表节流：每 80ms 更新一次，避免每帧写 DOM
+        if (wy_now - wy_lastMeterAt > 80) {
+          wy_lastMeterAt = wy_now;
+          wy_meterNum.textContent = wy_mag.toFixed(1);
+          var wy_percent = Math.min(100, (wy_mag / WY_METER_MAX) * 100);
+          wy_meterFill.style.width = wy_percent + '%';
+        }
+
+        // 回落到安全值以下，重新允许触发
+        if (wy_mag < WY_REARM) {
+          wy_armed = true;
+        }
+
+        if (!wy_armed || wy_now < wy_cooldownUntil) {
+          return;
+        }
+
+        if (wy_mag > WY_THRESHOLD) {
+          wy_armed = false;                        // 立刻上锁
+          wy_cooldownUntil = wy_now + WY_COOLDOWN; // 进入冷却
+          wy_draw();
+          wy_setStatus('已抽到一份，冷却 1.5 秒', 'ok');
+          setTimeout(function () {
+            if (wy_listening) {
+              wy_setStatus('正在监听摇动…', 'ok');
+            }
+          }, WY_COOLDOWN);
+        }
+      }
+
+      /* ============ 不支持时的处理 ============ */
+      function wy_unsupported() {
+        wy_listening = false;
+        window.removeEventListener('devicemotion', wy_onMotion);
+        wy_setStatus('当前设备不支持，请用手机打开', 'off');
+        wy_fallbackBtn.classList.remove('wy_hidden');   // 露出兜底入口
+        wy_meterNum.textContent = '0.0';
+        wy_meterFill.style.width = '0%';
+      }
+
+      /* ============ 开始监听 ============ */
+      function wy_startListen() {
+        if (wy_listening) {
+          return;
+        }
+        wy_listening = true;
+        window.addEventListener('devicemotion', wy_onMotion);
+        wy_setStatus('正在监听摇动…', 'ok');
+        wy_permBtn.classList.add('wy_hidden');
+
+        // 2 秒内一条有效数据都没收到，判定为不支持
+        setTimeout(function () {
+          if (!wy_gotData) {
+            wy_unsupported();
+          }
+        }, WY_WAIT_DATA);
+      }
+
+      /* ============ 初始化 ============ */
+      function wy_init() {
+        // 第一道保险：事件本身是否存在
+        if (!('DeviceMotionEvent' in window)) {
+          wy_unsupported();
+          return;
+        }
+
+        // 第二道保险：iOS 13+ 需要用户点击授权
+        if (typeof DeviceMotionEvent.requestPermission === 'function') {
+          wy_setStatus('需要你授权后才能读取传感器', 'wait');
+          wy_permBtn.classList.remove('wy_hidden');
+          wy_fallbackBtn.classList.remove('wy_hidden');  // 拒绝时也有路可走
+          return;
+        }
+
+        // 安卓等其他设备：直接开始监听
+        wy_startListen();
+      }
+
+      /* ============ 事件绑定 ============ */
+
+      // iOS 权限按钮：requestPermission 必须由用户手势触发
+      wy_permBtn.addEventListener('click', function () {
+        DeviceMotionEvent.requestPermission()
+          .then(function (wy_state) {
+            if (wy_state === 'granted') {
+              wy_startListen();
+            } else {
+              wy_setStatus('未授权传感器，可手动抽取', 'off');
+              wy_fallbackBtn.classList.remove('wy_hidden');
+            }
+          })
+          .catch(function () {
+            // 非安全上下文（http）或浏览器不支持时可能抛错，这里兜住
+            wy_setStatus('授权失败，可手动抽取', 'off');
+            wy_fallbackBtn.classList.remove('wy_hidden');
+          });
+      });
+
+      // 降级按钮：始终可用，电脑上也能演示
+      wy_fallbackBtn.addEventListener('click', function () {
+        wy_draw();
+      });
+
+      wy_init();
+
+    })();
+  </script>
+</body>
+</html>

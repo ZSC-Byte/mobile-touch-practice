@@ -1,0 +1,166 @@
+/* ==========================================================================
+   姓名：邹思成    学号：23001010601
+   文件：wy-common.css（公共样式）
+   说明：只放全站通用的重置、排版、按钮与提示条。
+        触摸手势相关样式（如 touch-action）一律写在各自页面里，
+        绝不加在 body 上，避免整页无法滚动。
+   ========================================================================== */
+
+/* ① 全局去掉点击灰块（iOS / 安卓都认） */
+* {
+  -webkit-tap-highlight-color: transparent;
+  box-sizing: border-box;
+}
+
+:root {
+  --wy_bg: #f6f5fb;
+  --wy_card: #ffffff;
+  --wy_text: #1b1a2e;
+  --wy_sub: #6f6d86;
+  --wy_line: #e6e4f0;
+  --wy_main: #6b4eff;
+  --wy_main_deep: #4a2fe0;
+  --wy_radius: 20px;
+  --wy_shadow: 0 8px 24px rgba(43, 32, 100, 0.08);
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--wy_bg);
+  color: var(--wy_text);
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  font-size: 15px;
+  line-height: 1.65;
+  /* 让页面在 iPhone 上不被底部小黑条挡住 */
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  -webkit-font-smoothing: antialiased;
+}
+
+.wy_page {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+/* 顶部返回条 */
+.wy_topbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 0 6px;
+}
+
+.wy_back {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--wy_sub);
+  text-decoration: none;
+  font-size: 14px;
+  /* 消除历史 300ms 点击延迟 */
+  touch-action: manipulation;
+}
+
+.wy_back:active {
+  color: var(--wy_main);
+}
+
+/* 页面主标题 */
+.wy_title {
+  margin: 8px 0 4px;
+  font-size: 24px;
+  line-height: 1.3;
+  letter-spacing: 0.5px;
+}
+
+.wy_subtitle {
+  margin: 0 0 18px;
+  color: var(--wy_sub);
+  font-size: 14px;
+}
+
+/* 卡片 */
+.wy_card {
+  background: var(--wy_card);
+  border-radius: var(--wy_radius);
+  box-shadow: var(--wy_shadow);
+  padding: 18px;
+  margin-bottom: 16px;
+}
+
+.wy_card_title {
+  margin: 0 0 10px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+/* 按钮：移动端最小触控区 44px */
+.wy_btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--wy_main);
+  color: #fff;
+  font-size: 15px;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background 0.2s, transform 0.1s;
+}
+
+/* 手指没有悬停态，按压反馈统一用 :active */
+.wy_btn:active {
+  background: var(--wy_main_deep);
+  transform: scale(0.97);
+}
+
+.wy_btn--ghost {
+  background: rgba(107, 78, 255, 0.1);
+  color: var(--wy_main);
+}
+
+.wy_btn--ghost:active {
+  background: rgba(107, 78, 255, 0.2);
+  color: var(--wy_main_deep);
+}
+
+/* 提示条 */
+.wy_hint {
+  display: block;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(107, 78, 255, 0.08);
+  color: #4f4680;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.wy_hint--warn {
+  background: rgba(255, 138, 0, 0.12);
+  color: #8a4b00;
+}
+
+/* 页脚署名 */
+.wy_footer {
+  margin: 24px 0 6px;
+  text-align: center;
+  color: #a7a5ba;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+/* 通用工具类 */
+.wy_hidden {
+  display: none !important;
+}

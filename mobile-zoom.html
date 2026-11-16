@@ -1,0 +1,582 @@
+<!-- 姓名：邹思成    学号：23001010601    任务三：图片查看器    日期：2026-11-16 -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <!-- ① 视口：不写会整体缩小 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>任务三 · 图片查看器 | 邹思成</title>
+  <link rel="stylesheet" href="assets/css/wy-common.css">
+  <style>
+    /* ---------------- 查看器舞台 ---------------- */
+    .wy_stage {
+      position: relative;
+      height: min(68vh, 520px);
+      border-radius: 24px;
+      background: #100d1c;
+      overflow: hidden;
+      box-shadow: 0 16px 36px rgba(33, 24, 80, 0.18);
+      /* ③ 手势全部由我接管：浏览器不要滚动、也不要缩放整页 */
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    .wy_photo {
+      position: absolute;
+      left: 0;
+      top: 0;
+      /* 图片加载完成前先用容器尺寸兜底，避免原始 1832px 撑出来闪一下 */
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      /* 缩放围绕左上角，位移与缩放才能分开算，不被原点干扰 */
+      transform-origin: 0 0;
+      will-change: transform;
+      pointer-events: none;
+      -webkit-user-drag: none;
+    }
+
+    /* 底部渐隐，让比例指示器和提示更清楚 */
+    .wy_stage_fade {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 90px;
+      background: linear-gradient(to top, rgba(16, 13, 28, 0.75), rgba(16, 13, 28, 0));
+      pointer-events: none;
+    }
+
+    .wy_scale_badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      padding: 5px 12px;
+      border-radius: 999px;
+      background: rgba(16, 13, 28, 0.62);
+      color: #fff;
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.5px;
+      backdrop-filter: blur(6px);
+      pointer-events: none;
+    }
+
+    .wy_stage_hint {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 78%;
+      padding: 14px 16px;
+      border-radius: 14px;
+      background: rgba(0, 0, 0, 0.62);
+      color: #fff;
+      text-align: center;
+      font-size: 13px;
+      line-height: 1.8;
+      pointer-events: none;
+      transition: opacity 0.4s;
+    }
+
+    .wy_stage_hint.is-off {
+      opacity: 0;
+    }
+
+    /* ---------------- 控制条 ---------------- */
+    .wy_bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 14px;
+      padding: 0 4px;
+    }
+
+    .wy_bar_text {
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .wy_bar_text small {
+      display: block;
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--wy_sub);
+    }
+
+    .wy_reset_btn {
+      min-height: 40px;
+      padding: 0 16px;
+      border: 0;
+      border-radius: 999px;
+      background: rgba(107, 78, 255, 0.1);
+      color: var(--wy_main);
+      font-size: 13px;
+      font-family: inherit;
+      touch-action: manipulation;
+    }
+
+    .wy_reset_btn:active {
+      background: rgba(107, 78, 255, 0.22);
+    }
+
+    /* ---------------- 说明 ---------------- */
+    .wy_spec {
+      margin: 0;
+      padding-left: 18px;
+      font-size: 13px;
+      color: #4a4863;
+      line-height: 2;
+    }
+
+    .wy_spec li::marker {
+      color: var(--wy_main);
+    }
+
+    .wy_kbd {
+      padding: 1px 6px;
+      border-radius: 6px;
+      background: #efedf9;
+      color: #4a2fe0;
+      font-family: "SF Mono", Consolas, monospace;
+      font-size: 12px;
+    }
+
+    .wy_formula {
+      margin-top: 10px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: #15122a;
+      color: #cfcbe8;
+      font-family: "SF Mono", Consolas, monospace;
+      font-size: 12px;
+      line-height: 2;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="wy_page">
+
+    <div class="wy_topbar">
+      <a class="wy_back" href="index.html">← 返回导航</a>
+    </div>
+
+    <h1 class="wy_title">图片查看器</h1>
+    <p class="wy_subtitle">任务三 · 双指缩放 · 双击放大 · 单指拖动（★★★）</p>
+
+    <!-- 查看器 -->
+    <div class="wy_stage" id="wy_stage">
+      <img class="wy_photo" id="wy_photo" src="assets/img/wy-photo-main.jpg" alt="夜市蒸笼与红灯笼" draggable="false">
+      <div class="wy_stage_fade"></div>
+      <div class="wy_scale_badge" id="wy_scale_badge">1.0x</div>
+      <div class="wy_stage_hint" id="wy_stage_hint">
+        双指缩放请用手机打开<br>
+        双击可在 1x / 2x 之间切换，放大后单指拖动
+      </div>
+    </div>
+
+    <div class="wy_bar">
+      <div class="wy_bar_text">
+        <span id="wy_state_text">原始大小</span>
+        <small>1x ~ 4x · 双击切换 1x/2x</small>
+      </div>
+      <button class="wy_reset_btn" id="wy_reset" type="button">复位 1x</button>
+    </div>
+
+    <div class="wy_card" style="margin-top: 18px;">
+      <h2 class="wy_card_title">操作说明</h2>
+      <ul class="wy_spec">
+        <li><b>双指缩放</b>：两指间距变大即放大，范围限制在 1x ~ 4x</li>
+        <li><b>双击</b>：1x 与 2x 之间切换，以双击点为基准放大</li>
+        <li><b>单指拖动</b>：放大后才能拖，松手自动夹回边界内</li>
+        <li><b>缩回 1x</b>：自动居中，拖动失效</li>
+        <li><b>旋转屏幕</b>：缩放倍数保留，位置重新夹紧</li>
+      </ul>
+    </div>
+
+    <div class="wy_card">
+      <h2 class="wy_card_title">怎么保证缩放时不「跳」？（答辩要点）</h2>
+      <p style="margin: 0 0 8px; font-size: 13px; color: #4a4863; line-height: 2;">
+        关键在于「锚点」：缩放前先把两指中点换算成图片内部的坐标，缩放后再反推位移，
+        让中点下方的那个像素始终停在中点不动。
+      </p>
+      <div class="wy_formula">
+        ① 锚点 = (中点 − 当前位移) ÷ 当前倍数<br>
+        ② 新位移 = 中点 − 锚点 × 新倍数<br>
+        ③ 再按边界夹紧（中间留白则居中）
+      </div>
+      <p style="margin: 10px 0 0; font-size: 13px; color: #4a4863; line-height: 2;">
+        配套的三个细节：<br>
+        · <span class="wy_kbd">transform-origin: 0 0</span>，位移与缩放互不干扰；<br>
+        · 每次 <span class="wy_kbd">touchstart</span> 重置上一帧距离，避免首帧拿残留值比较导致跳变；<br>
+        · 缩放倍数每帧从手势起点计算并夹紧到 1~4，不做无限制累乘。
+      </p>
+    </div>
+
+    <div class="wy_footer">
+      邹思成 · 23001010601<br>
+      任务三 · 图片查看器
+    </div>
+
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      /* ============ 元素 ============ */
+      var wy_stage = document.getElementById('wy_stage');
+      var wy_photo = document.getElementById('wy_photo');
+      var wy_badge = document.getElementById('wy_scale_badge');
+      var wy_hint = document.getElementById('wy_stage_hint');
+      var wy_stateText = document.getElementById('wy_state_text');
+      var wy_resetBtn = document.getElementById('wy_reset');
+
+      /* ============ 常量 ============ */
+      var WY_MIN = 1;        // 最小倍数
+      var WY_MAX = 4;        // 最大倍数
+      var WY_DBL_MS = 300;   // 双击判定间隔
+      var WY_TAP_PX = 10;    // 点击允许的最大位移
+
+      /* ============ 状态 ============ */
+      var wy_W = 0, wy_H = 0;           // 容器尺寸
+      var wy_baseW = 0, wy_baseH = 0;   // 1x 时图片的显示尺寸
+      var wy_scale = 1;                 // 当前倍数
+      var wy_tx = 0, wy_ty = 0;         // 当前位移（屏幕像素）
+
+      var wy_mode = '';                 // '' / 'pinch' / 'drag'
+      var wy_skip = false;              // 动画期间忽略新手势
+
+      var wy_pinchDist0 = 0;            // 双指起始间距
+      var wy_pinchScale0 = 1;           // 双指起始倍数
+      var wy_anchorX = 0, wy_anchorY = 0; // 起始锚点（图片内部坐标）
+
+      var wy_dragX0 = 0, wy_dragY0 = 0; // 单指起始坐标
+      var wy_dragTx0 = 0, wy_dragTy0 = 0;
+
+      var wy_moved = false;             // 本次手势是否移动过（用于区分双击与拖动）
+      var wy_lastTap = 0;               // 上一次单击的时间戳
+      var wy_busyUntil = 0;             // 动画锁定结束时间
+
+      /* ============ 基础工具 ============ */
+
+      function wy_clampValue(wy_v, wy_min, wy_max) {
+        return Math.min(wy_max, Math.max(wy_min, wy_v));
+      }
+
+      // 拖动过程中的软限制：超出边界越拖越沉，松手再弹回
+      function wy_soft(wy_v, wy_min, wy_max) {
+        if (wy_v > wy_max) {
+          return wy_max + (wy_v - wy_max) * 0.35;
+        }
+        if (wy_v < wy_min) {
+          return wy_min + (wy_v - wy_min) * 0.35;
+        }
+        return wy_v;
+      }
+
+      // 把当前状态写进 transform
+      function wy_apply(wy_animate) {
+        wy_photo.style.transition = wy_animate
+          ? 'transform 0.25s cubic-bezier(0.25, 0.1, 0.25, 1)'
+          : 'none';
+        wy_photo.style.transform =
+          'translate3d(' + wy_tx + 'px, ' + wy_ty + 'px, 0) scale(' + wy_scale + ')';
+        wy_badge.textContent = wy_scale.toFixed(1) + 'x';
+        wy_stateText.textContent = wy_scale <= 1.01
+          ? '原始大小'
+          : '已放大 ' + wy_scale.toFixed(1) + ' 倍';
+      }
+
+      // 边界夹紧：小于容器就居中，大于容器就限制在容器内
+      function wy_clampPos() {
+        var wy_rw = wy_baseW * wy_scale;
+        var wy_rh = wy_baseH * wy_scale;
+
+        if (wy_rw <= wy_W) {
+          wy_tx = (wy_W - wy_rw) / 2;
+        } else {
+          wy_tx = wy_clampValue(wy_tx, wy_W - wy_rw, 0);
+        }
+
+        if (wy_rh <= wy_H) {
+          wy_ty = (wy_H - wy_rh) / 2;
+        } else {
+          wy_ty = wy_clampValue(wy_ty, wy_H - wy_rh, 0);
+        }
+      }
+
+      // 量尺寸 + 按 contain 规则算 1x 显示尺寸（保持原图比例，不拉伸）
+      function wy_layout() {
+        wy_W = wy_stage.clientWidth;
+        wy_H = wy_stage.clientHeight;
+
+        var wy_nw = wy_photo.naturalWidth || 1;
+        var wy_nh = wy_photo.naturalHeight || 1;
+        var wy_ratio = wy_nw / wy_nh;
+
+        if (wy_W / wy_H > wy_ratio) {
+          // 容器更宽：高度顶满，左右留白
+          wy_baseH = wy_H;
+          wy_baseW = wy_H * wy_ratio;
+        } else {
+          // 容器更窄：宽度顶满，上下留白
+          wy_baseW = wy_W;
+          wy_baseH = wy_W / wy_ratio;
+        }
+
+        wy_photo.style.width = wy_baseW + 'px';
+        wy_photo.style.height = wy_baseH + 'px';
+      }
+
+      // 取两指中点（换算成相对容器的坐标）
+      function wy_midPoint(e) {
+        var wy_r = wy_stage.getBoundingClientRect();
+        return {
+          x: (e.touches[0].clientX + e.touches[1].clientX) / 2 - wy_r.left,
+          y: (e.touches[0].clientY + e.touches[1].clientY) / 2 - wy_r.top
+        };
+      }
+
+      function wy_twoDist(e) {
+        return Math.hypot(
+          e.touches[1].clientX - e.touches[0].clientX,
+          e.touches[1].clientY - e.touches[0].clientY
+        );
+      }
+
+      function wy_hideHint() {
+        wy_hint.classList.add('is-off');
+      }
+
+      // 双击 / 复位统一走这里：以某点为锚点缩放到目标倍数
+      function wy_zoomTo(wy_target, wy_px, wy_py) {
+        var wy_old = wy_scale;                                // 先记住旧倍数
+        var wy_new = wy_clampValue(wy_target, WY_MIN, WY_MAX);
+
+        if (wy_new <= 1.01) {
+          // 回到 1x：直接交给夹紧逻辑居中
+          wy_scale = 1;
+          wy_clampPos();
+        } else {
+          // 锚点换算：先用旧倍数把屏幕点换回图片坐标
+          var wy_ax = (wy_px - wy_tx) / wy_old;
+          var wy_ay = (wy_py - wy_ty) / wy_old;
+          // 再按新倍数反推位移，让该点仍停在原处
+          wy_scale = wy_new;
+          wy_tx = wy_px - wy_ax * wy_new;
+          wy_ty = wy_py - wy_ay * wy_new;
+          wy_clampPos();
+        }
+
+        wy_apply(true);
+        wy_busyUntil = Date.now() + 260;   // 过渡期间不接受新手势
+      }
+
+      /* ============ touchstart ============ */
+      wy_stage.addEventListener('touchstart', function (e) {
+        if (Date.now() < wy_busyUntil) {
+          wy_skip = true;
+          return;
+        }
+        wy_skip = false;
+        wy_moved = false;
+        wy_hideHint();
+
+        var wy_r = wy_stage.getBoundingClientRect();
+
+        if (e.touches.length >= 2) {
+          /* --- 双指：进入缩放 --- */
+          wy_mode = 'pinch';
+          wy_pinchDist0 = wy_twoDist(e);
+          wy_pinchScale0 = wy_scale;
+
+          var wy_mid = wy_midPoint(e);
+          // 关键：记下中点对应的图片内部坐标，之后缩放都围绕它
+          wy_anchorX = (wy_mid.x - wy_tx) / wy_scale;
+          wy_anchorY = (wy_mid.y - wy_ty) / wy_scale;
+        } else {
+          /* --- 单指：放大后才允许拖动 --- */
+          wy_mode = wy_scale > 1.01 ? 'drag' : '';
+          wy_dragX0 = e.touches[0].clientX - wy_r.left;
+          wy_dragY0 = e.touches[0].clientY - wy_r.top;
+          wy_dragTx0 = wy_tx;
+          wy_dragTy0 = wy_ty;
+        }
+      }, { passive: true });
+
+      /* ============ touchmove ============ */
+      wy_stage.addEventListener('touchmove', function (e) {
+        if (wy_skip) {
+          return;
+        }
+
+        if (e.touches.length >= 2) {
+          // 第二根手指可能在移动中途才加入，这里补一次初始化
+          if (wy_mode !== 'pinch') {
+            wy_mode = 'pinch';
+            wy_pinchDist0 = wy_twoDist(e);
+            wy_pinchScale0 = wy_scale;
+            var wy_m0 = wy_midPoint(e);
+            wy_anchorX = (wy_m0.x - wy_tx) / wy_scale;
+            wy_anchorY = (wy_m0.y - wy_ty) / wy_scale;
+          }
+
+          e.preventDefault();   // 阻止浏览器把双指手势当成整页缩放
+
+          // 倍数从"手势起点"算，而不是每帧累乘，避免误差滚雪球
+          var wy_d = wy_twoDist(e);
+          // 两指几乎重合时起始间距会接近 0，兜一个下限防止除零
+          var wy_baseDist = wy_pinchDist0 > 1 ? wy_pinchDist0 : 1;
+          var wy_target = wy_clampValue(
+            wy_pinchScale0 * (wy_d / wy_baseDist),
+            WY_MIN,
+            WY_MAX
+          );
+
+          var wy_mid = wy_midPoint(e);
+          wy_scale = wy_target;
+          // 中点跟随手指：缩放的同时也能平移
+          wy_tx = wy_mid.x - wy_anchorX * wy_scale;
+          wy_ty = wy_mid.y - wy_anchorY * wy_scale;
+
+          // 过程中的越界用软限制，松手再硬夹紧
+          var wy_rw = wy_baseW * wy_scale;
+          var wy_rh = wy_baseH * wy_scale;
+          wy_tx = wy_soft(wy_tx, wy_W - wy_rw, 0);
+          wy_ty = wy_soft(wy_ty, wy_H - wy_rh, 0);
+
+          wy_moved = true;
+          wy_apply(false);
+          return;
+        }
+
+        /* --- 单指 --- */
+        if (wy_mode !== 'drag') {
+          return;
+        }
+
+        e.preventDefault();
+
+        var wy_r = wy_stage.getBoundingClientRect();
+        var wy_cx = e.touches[0].clientX - wy_r.left;
+        var wy_cy = e.touches[0].clientY - wy_r.top;
+
+        var wy_ntx = wy_dragTx0 + (wy_cx - wy_dragX0);
+        var wy_nty = wy_dragTy0 + (wy_cy - wy_dragY0);
+
+        var wy_rw2 = wy_baseW * wy_scale;
+        var wy_rh2 = wy_baseH * wy_scale;
+        wy_tx = wy_soft(wy_ntx, wy_W - wy_rw2, 0);
+        wy_ty = wy_soft(wy_nty, wy_H - wy_rh2, 0);
+
+        if (Math.abs(wy_cx - wy_dragX0) > WY_TAP_PX ||
+            Math.abs(wy_cy - wy_dragY0) > WY_TAP_PX) {
+          wy_moved = true;
+        }
+
+        wy_apply(false);
+      }, { passive: false });
+
+      /* ============ touchend ============ */
+      wy_stage.addEventListener('touchend', function (e) {
+        if (wy_skip) {
+          wy_skip = false;
+          wy_mode = '';
+          return;
+        }
+
+        var wy_wasMode = wy_mode;
+        var wy_r = wy_stage.getBoundingClientRect();
+
+        // 单指时用抬手点补算位移：1x 下不进入拖动分支，也要能区分"点一下"和"拖了一下"
+        if (wy_wasMode !== 'pinch' && e.changedTouches.length > 0) {
+          var wy_endX = e.changedTouches[0].clientX - wy_r.left;
+          var wy_endY = e.changedTouches[0].clientY - wy_r.top;
+          if (Math.abs(wy_endX - wy_dragX0) > WY_TAP_PX ||
+              Math.abs(wy_endY - wy_dragY0) > WY_TAP_PX) {
+            wy_moved = true;
+          }
+        }
+
+        // 收尾：夹回边界，带 0.25s 过渡
+        if (wy_scale < 1.01) {
+          wy_scale = 1;
+        }
+        wy_clampPos();
+        wy_apply(true);
+        wy_mode = '';
+
+        // 双指手势结束时不参与双击判定
+        if (wy_wasMode === 'pinch' || wy_moved) {
+          wy_lastTap = 0;
+          return;
+        }
+
+        // 单指且没移动 → 可能是一次点击，检查是否构成双击
+        var wy_now = Date.now();
+        if (wy_now - wy_lastTap < WY_DBL_MS && wy_lastTap !== 0) {
+          var wy_t = e.changedTouches[0];
+          var wy_px = wy_t.clientX - wy_r.left;
+          var wy_py = wy_t.clientY - wy_r.top;
+
+          if (wy_scale > 1.5) {
+            wy_zoomTo(1, wy_px, wy_py);      // 已放大 → 回到 1x
+          } else {
+            wy_zoomTo(2, wy_px, wy_py);      // 1x → 放大到 2x
+          }
+          wy_lastTap = 0;                    // 重置，避免三击被算成两次双击
+        } else {
+          wy_lastTap = wy_now;
+        }
+      }, { passive: true });
+
+      /* ============ touchcancel ============ */
+      wy_stage.addEventListener('touchcancel', function () {
+        wy_skip = false;
+        wy_mode = '';
+        wy_lastTap = 0;
+        wy_clampPos();
+        wy_apply(true);
+      }, { passive: true });
+
+      /* ============ 复位按钮 ============ */
+      wy_resetBtn.addEventListener('click', function () {
+        wy_scale = 1;
+        wy_clampPos();
+        wy_apply(true);
+        wy_busyUntil = Date.now() + 260;
+        wy_lastTap = 0;
+      });
+
+      /* ============ 初始化 ============ */
+      function wy_init() {
+        wy_layout();
+        wy_scale = 1;
+        wy_clampPos();     // 1x 时自动居中
+        wy_apply(false);
+
+        // 提示 3 秒后自动淡出
+        setTimeout(wy_hideHint, 3000);
+      }
+
+      if (wy_photo.complete) {
+        wy_init();
+      } else {
+        wy_photo.addEventListener('load', wy_init);
+      }
+
+      // 横竖屏切换：保留缩放倍数，重新量尺寸并夹紧
+      window.addEventListener('resize', function () {
+        wy_layout();
+        wy_clampPos();
+        wy_apply(false);
+      });
+
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,199 @@
+<!-- 姓名：邹思成    学号：23001010601    任务：课堂实践入口导航页    日期：2026-11-16 -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <!-- ① 视口：不写会整体缩小 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>移动端触摸事件课堂实践 | 邹思成</title>
+  <link rel="stylesheet" href="assets/css/wy-common.css">
+  <style>
+    .wy_hero {
+      margin-top: 8px;
+      padding: 26px 22px 24px;
+      border-radius: 24px;
+      background: linear-gradient(140deg, #241a4d 0%, #3a2a7a 55%, #6b4eff 100%);
+      color: #fff;
+      box-shadow: 0 12px 30px rgba(58, 42, 122, 0.28);
+    }
+
+    .wy_hero_tag {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.16);
+      font-size: 12px;
+      letter-spacing: 1px;
+    }
+
+    .wy_hero_title {
+      margin: 14px 0 6px;
+      font-size: 25px;
+      line-height: 1.35;
+      font-weight: 800;
+    }
+
+    .wy_hero_desc {
+      margin: 0;
+      font-size: 13px;
+      opacity: 0.82;
+      letter-spacing: 2px;
+    }
+
+    .wy_hero_meta {
+      margin-top: 18px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(255, 255, 255, 0.18);
+      font-size: 12px;
+      opacity: 0.78;
+    }
+
+    .wy_section_title {
+      margin: 26px 4px 12px;
+      font-size: 14px;
+      color: var(--wy_sub);
+      font-weight: 600;
+    }
+
+    /* 任务卡：整块可点，按压有反馈 */
+    .wy_task {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px;
+      margin-bottom: 12px;
+      border-radius: var(--wy_radius);
+      background: var(--wy_card);
+      box-shadow: var(--wy_shadow);
+      text-decoration: none;
+      color: inherit;
+      /* 跳转类交互用 click 即可，这里只消掉 300ms 延迟 */
+      touch-action: manipulation;
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+    }
+
+    .wy_task:active {
+      transform: scale(0.985);
+      box-shadow: 0 4px 12px rgba(43, 32, 100, 0.06);
+    }
+
+    .wy_task_no {
+      flex: 0 0 auto;
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .wy_task_no--1 { background: linear-gradient(135deg, #7c8cff, #4b57d6); }
+    .wy_task_no--2 { background: linear-gradient(135deg, #ff9a76, #e8590c); }
+    .wy_task_no--3 { background: linear-gradient(135deg, #4dd0a5, #0b8f62); }
+    .wy_task_no--4 { background: linear-gradient(135deg, #f2749b, #c2185b); }
+
+    .wy_task_body {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    .wy_task_name {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .wy_task_star {
+      margin-left: 6px;
+      font-size: 12px;
+      font-weight: 400;
+      color: #f0a000;
+      letter-spacing: 1px;
+    }
+
+    .wy_task_desc {
+      margin-top: 2px;
+      font-size: 12px;
+      color: var(--wy_sub);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .wy_task_arrow {
+      flex: 0 0 auto;
+      color: #c3c1d4;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wy_page">
+
+    <div class="wy_topbar">
+      <a class="wy_back" href="#">← 返回课堂实践中心</a>
+    </div>
+
+    <div class="wy_hero">
+      <span class="wy_hero_tag">高级网页设计 · 课堂实践</span>
+      <h1 class="wy_hero_title">移动端触摸事件<br>从按下到抬起</h1>
+      <p class="wy_hero_desc">按下 · 滑动 · 缩放 · 摇一摇</p>
+      <div class="wy_hero_meta">邹思成 · 23001010601 · 四个递进任务</div>
+    </div>
+
+    <div class="wy_section_title">选择任务</div>
+
+    <a class="wy_task" href="mobile-probe.html">
+      <span class="wy_task_no wy_task_no--1">01</span>
+      <span class="wy_task_body">
+        <span class="wy_task_name">事件侦探<span class="wy_task_star">★</span></span>
+        <span class="wy_task_desc">看清 touchstart / move / end / cancel 的真实顺序</span>
+      </span>
+      <span class="wy_task_arrow">›</span>
+    </a>
+
+    <a class="wy_task" href="mobile-gesture.html">
+      <span class="wy_task_no wy_task_no--2">02</span>
+      <span class="wy_task_body">
+        <span class="wy_task_name">手势卡片<span class="wy_task_star">★★</span></span>
+        <span class="wy_task_desc">左右滑动切换四道中华美食，阈值 40px</span>
+      </span>
+      <span class="wy_task_arrow">›</span>
+    </a>
+
+    <a class="wy_task" href="mobile-zoom.html">
+      <span class="wy_task_no wy_task_no--3">03</span>
+      <span class="wy_task_body">
+        <span class="wy_task_name">图片查看器<span class="wy_task_star">★★★</span></span>
+        <span class="wy_task_desc">双指缩放 1–4 倍 · 双击 · 单指拖动</span>
+      </span>
+      <span class="wy_task_arrow">›</span>
+    </a>
+
+    <a class="wy_task" href="mobile-sensor.html">
+      <span class="wy_task_no wy_task_no--4">04</span>
+      <span class="wy_task_body">
+        <span class="wy_task_name">摇一摇彩蛋<span class="wy_task_star">★★★★</span></span>
+        <span class="wy_task_desc">摇动手机抽今日菜谱，含权限与降级</span>
+      </span>
+      <span class="wy_task_arrow">›</span>
+    </a>
+
+    <div class="wy_card" style="margin-top: 20px;">
+      <p class="wy_hint">
+        本页四个任务均基于 touch 触摸事件实现，请用手机打开体验。<br>
+        没有手机时，可在浏览器开发者工具中切换到设备模式（390 × 844）大致感受单指操作；
+        双指缩放与摇一摇在电脑上无法真实触发，请以真机为准。
+      </p>
+    </div>
+
+    <div class="wy_footer">
+      邹思成 · 23001010601<br>
+      高级网页设计 · 移动端事件课堂实践 · 2026-2027-1
+    </div>
+
+  </div>
+</body>
+</html>

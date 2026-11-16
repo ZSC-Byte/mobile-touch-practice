@@ -101,6 +101,8 @@
     }
 
     .wy_task_name {
+      /* 父级是 flex 里的 span，这里必须块级化，否则菜名和描述会挤在同一行 */
+      display: block;
       font-size: 15px;
       font-weight: 700;
     }
@@ -114,6 +116,7 @@
     }
 
     .wy_task_desc {
+      display: block;
       margin-top: 2px;
       font-size: 12px;
       color: var(--wy_sub);

@@ -347,6 +347,21 @@
       font-size: 11.5px;
       color: #4a2fe0;
     }
+
+    /* ---------------- 真机演示视频 ---------------- */
+    .wy_video_hint {
+      margin: 0 0 10px;
+      font-size: 12.5px;
+      line-height: 1.9;
+      color: #6b6880;
+    }
+
+    .wy_video {
+      display: block;
+      width: 100%;
+      border-radius: 12px;
+      background: #000;
+    }
   </style>
 </head>
 <body>
@@ -401,8 +416,8 @@
       </div>
 
       <p class="wy_hero_tip">
-        摇动没反应时：iOS 请用 Safari，安卓请用 Chrome；<br>
-        微信、QQ 等内置浏览器通常不会派发传感器数据，请点右上角「在浏览器打开」。
+        摇动没反应时：必须用 <b>https</b> 打开（http 局域网地址收不到传感器数据）；<br>
+        iOS 用 Safari，安卓用 Chrome，微信 / QQ 内置浏览器通常不派发传感器数据。
       </p>
 
       <!-- 失败时显示的环境诊断，便于判断问题出在哪一层 -->
@@ -476,8 +491,26 @@
         <li><b>阈值 18</b>：静止约 9.8，轻放桌面波动约 10~12，快速摇动可达 20~35，取 18 区分得开</li>
         <li><b>冷却 1.5 秒</b>：一次摇动会连续产生几十条数据，没有冷却会瞬间抽出七八个结果</li>
         <li><b>回落再武装</b>：触发后必须等合成值降到 12 以下，才允许下一次判定，避免持续晃动连续触发</li>
-        <li><b>无数据判定</b>：绑定事件后 2 秒内没收到有效值，就当这台设备不支持</li>
+        <li><b>无数据判定</b>：绑定事件后 2 秒内没收到有效值，只提示「暂未收到」并保留监听，同时给出「重新检测传感器」；若确实是 HTTP 或浏览器限制，会直接说明原因</li>
       </ul>
+    </div>
+
+    <!-- 真机演示 -->
+    <div class="wy_card">
+      <h2 class="wy_card_title">真机演示：摇一摇抽取菜谱</h2>
+      <p class="wy_video_hint">
+        由另一台设备录制——安卓手机在 HTTPS 页面中实际摇动，触发抽奖弹层。
+      </p>
+      <video
+        class="wy_video"
+        src="assets/video/wy-sensor-demo.mp4"
+        controls
+        playsinline
+        preload="metadata"
+        poster="">
+        你的浏览器不支持 video 标签，可
+        <a href="assets/video/wy-sensor-demo.mp4">点此下载视频</a>。
+      </video>
     </div>
 
     <div class="wy_footer">
@@ -687,6 +720,14 @@
 
       /* ============ 初始化 ============ */
       function wy_init() {
+        // 第零道保险：传感器只在安全上下文（HTTPS / localhost）里可用。
+        // 用局域网 http 地址打开时，浏览器根本不会暴露 DeviceMotionEvent，
+        // 这时提示"不支持"会误导，必须明确告诉用户是协议问题。
+        if (!window.isSecureContext) {
+          wy_unsupported('当前是 HTTP 访问，传感器需要 HTTPS');
+          return;
+        }
+
         // 第一道保险：事件本身是否存在
         if (!('DeviceMotionEvent' in window)) {
           wy_unsupported('当前浏览器不支持摇一摇，请换系统浏览器');
